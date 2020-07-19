@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class Solution {
     //JZ-01. 二维数组中的的查找
     public boolean Find(int target, int[][] array) {
@@ -42,4 +44,20 @@ public class Solution {
         }
         return str.toString();
     }
+
+    //JZ-03. 从尾到头打印链表
+    public ArrayList<Integer> printListFromTailToHead(ListNode listNode) {
+        ArrayList<Integer> ret = new ArrayList<>();
+        printListFromTailToHead(listNode, ret);
+        return ret;
+    }
+
+    public void printListFromTailToHead(ListNode listNode, ArrayList<Integer> ret) {
+        if (listNode != null) {
+            printListFromTailToHead(listNode.next, ret);
+            ret.add(listNode.val);
+        }
+    }
+
+
 }
