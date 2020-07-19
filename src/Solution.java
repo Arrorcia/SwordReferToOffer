@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Stack;
 
 public class Solution {
     //JZ-01. 二维数组中的的查找
@@ -59,5 +60,33 @@ public class Solution {
         }
     }
 
+    //JZ-04. 重建二叉树
+    public TreeNode reConstructBinaryTree(int[] pre, int[] in) {
+        TreeNode root = null;
+        Stack<TreeNode> stack = new Stack<>();
+        int i = 0, j = 0;
 
+        while (!stack.isEmpty() || i < pre.length || j < in.length) {
+            if (stack.isEmpty()) {
+                stack.push(new TreeNode(pre[i++]));
+                if (root == null) {
+                    root = stack.peek();
+                }
+            } else if (stack.peek().val == in[j]) {
+                TreeNode node = stack.pop();
+                j++;
+                if (i >= pre.length) {
+                    continue;
+                }
+                if (stack.isEmpty() || stack.peek().val != in[j]) {
+                    node.right = new TreeNode(pre[i++]);
+                    stack.push(node.right);
+                }
+            } else {
+                stack.peek().left = new TreeNode(pre[i++]);
+                stack.push(stack.peek().left);
+            }
+        }
+        return root;
+    }
 }
