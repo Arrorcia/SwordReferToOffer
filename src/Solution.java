@@ -89,4 +89,21 @@ public class Solution {
         }
         return root;
     }
+
+    //JZ-05.用两个栈实现队列
+    private Stack<Integer> stack1 = new Stack<>();
+    private Stack<Integer> stack2 = new Stack<>();
+
+    public void push(int node) {
+        stack2.push(node);
+    }
+
+    public int pop() {
+        if (stack1.isEmpty()) {
+            while (!stack2.isEmpty()) {
+                stack1.push(stack2.pop());
+            }
+        }
+        return stack1.pop();
+    }
 }
