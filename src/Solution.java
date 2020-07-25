@@ -96,19 +96,20 @@ public class Solution {
     private Stack<Integer> stack1 = new Stack<>();
     private Stack<Integer> stack2 = new Stack<>();
 
-    public void push(int node) {
-        stack2.push(node);
-    }
-
-    public int pop() {
-        if (stack1.isEmpty()) {
-            while (!stack2.isEmpty()) {
-                stack1.push(stack2.pop());
-            }
+    /*因为会和JZ-20产生函数名冲突。故注释掉
+        public void push(int node) {
+            stack2.push(node);
         }
-        return stack1.pop();
-    }
 
+        public int pop() {
+            if (stack1.isEmpty()) {
+                while (!stack2.isEmpty()) {
+                    stack1.push(stack2.pop());
+                }
+            }
+            return stack1.pop();
+        }
+    */
     //JZ-06.旋转数组的最小数字
     public int minNumberInRotateArray(int[] array) {
         if (array == null || array.length < 1) {
@@ -333,4 +334,239 @@ public class Solution {
         }
     }
 
+    //JZ-19.顺时针打印矩阵
+    public ArrayList<Integer> printMatrix(int[][] matrix) {
+        int dir = 0;//方向 0-右 1-下 2-左 3-上
+        int times = 0;//方向尝试次数
+        int i = 0, j = -1;//指针
+        int rows = matrix.length, cols = matrix[0].length;//size
+        boolean[][] visited = new boolean[rows][cols];
+        ArrayList<Integer> retList = new ArrayList<>();
+        while (times < 4) {
+            switch (dir) {
+                case 0:
+                    if (j + 1 < cols && !visited[i][j + 1]) {
+                        times = 0;
+                        j++;
+                        visited[i][j] = true;
+                        retList.add(matrix[i][j]);
+                    } else {
+                        times++;
+                        dir = (dir + 1) % 4;
+                    }
+                    break;
+                case 1:
+                    if (i + 1 < rows && !visited[i + 1][j]) {
+                        times = 0;
+                        i++;
+                        visited[i][j] = true;
+                        retList.add(matrix[i][j]);
+                    } else {
+                        times++;
+                        dir = (dir + 1) % 4;
+                    }
+                    break;
+                case 2:
+                    if (j > 0 && !visited[i][j - 1]) {
+                        times = 0;
+                        j--;
+                        visited[i][j] = true;
+                        retList.add(matrix[i][j]);
+                    } else {
+                        times++;
+                        dir = (dir + 1) % 4;
+                    }
+                    break;
+                default:
+                    if (i > 0 && !visited[i - 1][j]) {
+                        times = 0;
+                        i--;
+                        visited[i][j] = true;
+                        retList.add(matrix[i][j]);
+                    } else {
+                        times++;
+                        dir = (dir + 1) % 4;
+                    }
+                    break;
+            }
+        }
+        return retList;
+    }
+
+    //JZ-20.包含min函数的栈
+    Stack<Integer> stack = new Stack<>();
+    Stack<Integer> minStack = new Stack<>();
+
+    public void push(int node) {
+        if (!stack.isEmpty()) {
+            node = Math.min(stack.peek(), node);
+        }
+        stack.push(node);
+        minStack.push(node);
+    }
+
+    public void pop() {
+        stack.pop();
+        minStack.pop();
+    }
+
+    public int top() {
+        return stack.peek();
+    }
+
+    public int min() {
+        return minStack.peek();
+    }
+
+    //JZ-21.栈的压入弹出序列
+    public boolean IsPopOrder(int[] pushA, int[] popA) {
+        Stack<Integer> stack = new Stack<>();
+        int i = 0, j = 0;
+        if (pushA.length != popA.length) {
+            return false;
+        }
+        while (j < popA.length) {
+            if (stack.isEmpty()) {
+                stack.push(pushA[i++]);
+            } else if (stack.peek() != popA[j]) {
+                if (i >= pushA.length) {
+                    return false;
+                }
+                stack.push(pushA[i++]);
+            } else {
+                stack.pop();
+                j++;
+            }
+        }
+        return true;
+    }
+
+    //JZ-22.从上往下打印二叉树
+    public ArrayList<Integer> PrintFromTopToBottom(TreeNode root) {
+        Queue<TreeNode> queue = new LinkedList<>();
+        ArrayList<Integer> retList = new ArrayList<>();
+        if (root != null) {
+            queue.offer(root);
+        }
+        while (!queue.isEmpty()) {
+            TreeNode node = queue.poll();
+            retList.add(node.val);
+            if (node.left != null) {
+                queue.offer(node.left);
+            }
+            if (node.right != null) {
+                queue.offer(node.right);
+            }
+        }
+        return retList;
+    }
+
+    //JZ-23.二叉搜索树的后序遍历序列
+    public boolean VerifySquenceOfBST(int[] sequence) {
+        //return f1(sequence);
+        return f2(sequence);
+    }
+
+    //O（n）
+    public boolean f1(int[] sequence) {
+        if (sequence == null || sequence.length < 1) {
+            return false;
+        }
+        if (sequence.length < 2) {
+            return true;
+        }
+
+        int i = sequence.length - 1;
+        Stack<Integer> stack = new Stack<>();
+        int max = Integer.MAX_VALUE;
+
+        stack.push(sequence[i--]);
+        while (i >= 0) {
+            if (sequence[i] > max) {
+                return false;
+            }
+            if (sequence[i] > sequence[i + 1]) {
+                stack.push(sequence[i--]);
+            } else {
+                while (!stack.isEmpty() && stack.peek() > sequence[i]) {
+                    max = stack.pop();
+                }
+                stack.push(sequence[i--]);
+            }
+        }
+        return true;
+    }
+
+    //O（nlogn）
+    public boolean f2(int[] sequence) {
+        if (sequence == null || sequence.length < 1) {
+            return false;
+        }
+        if (sequence.length < 2) {
+            return true;
+        }
+        return f2(sequence, 0, sequence.length - 1);
+    }
+
+    public boolean f2(int[] sequence, int start, int end) {
+        if (sequence == null || sequence.length < 1) {
+            return false;
+        }
+        if (sequence.length < 2) {
+            return true;
+        }
+        if (start >= end) {
+            return true;
+        }
+        int k = sequence[end];
+        int i = start, j;
+        while (sequence[i] < k) {
+            i++;
+        }
+        j = i;
+        while (sequence[j] > k) {
+            j++;
+        }
+        if (j != end) {
+            return false;
+        }
+        return f2(sequence, start, i - 1) && f2(sequence, i, end - 1);
+    }
+
+    //JZ-24.二叉树中和为某一值得路径
+    public ArrayList<ArrayList<Integer>> FindPath(TreeNode root, int target) {
+        //return f1(root, target);
+        return f2(root, target);
+    }
+
+    //递归
+    public ArrayList<ArrayList<Integer>> f1(TreeNode root, int target) {
+        ArrayList<Integer> path = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> ret = new ArrayList<>();
+        if (root == null) {
+            return ret;
+        }
+        f1(root, target, path, ret);
+        return ret;
+    }
+
+    public void f1(TreeNode root, int target, ArrayList<Integer> path, ArrayList<ArrayList<Integer>> ret) {
+        path.add(root.val);
+        target -= root.val;
+        if (root.left == null && root.right == null && target == 0) {
+            ret.add((ArrayList<Integer>) path.clone());
+        }
+        if (root.left != null) {
+            f1(root.left, target, path, ret);
+        }
+        if (root.right != null) {
+            f1(root.right, target, path, ret);
+        }
+        path.remove(path.size() - 1);
+    }
+
+    //非递归
+    public ArrayList<ArrayList<Integer>> f2(TreeNode root, int target) {
+        return null;
+    }
 }
