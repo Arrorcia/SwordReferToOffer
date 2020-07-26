@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Stack;
+import java.util.*;
 
 public class Solution {
     //JZ-01. 二维数组中的的查找
@@ -567,6 +564,319 @@ public class Solution {
 
     //非递归
     public ArrayList<ArrayList<Integer>> f2(TreeNode root, int target) {
-        return null;
+        Stack<TreeNode> stack = new Stack<>();
+        ArrayList<ArrayList<Integer>> ret = new ArrayList<>();
+        ArrayList<Integer> path = new ArrayList<>();
+
+        if (root == null) {
+            return ret;
+        }
+        stack.push(root);
+        path.add(root.val);
+        target -= root.val;
+        root = root.left;
+        while (!stack.isEmpty()) {
+            if (root != null) {
+                stack.push(root);
+                path.add(root.val);
+                target -= root.val;
+                root = root.left;
+            } else if (stack.peek().right != null) {
+                root = stack.peek().right;
+            } else {
+                if (stack.peek().left == null && target == 0) {
+                    ret.add((ArrayList<Integer>) path.clone());
+                }
+                while (!stack.isEmpty() && root == stack.peek().right) {
+                    root = stack.pop();
+                    path.remove(path.size() - 1);
+                    target += root.val;
+                }
+                if (!stack.isEmpty()) {
+                    root = stack.peek().right;
+                }
+            }
+        }
+        return ret;
+    }
+
+    //JZ-25复杂链表的复制
+    public RandomListNode Clone(RandomListNode pHead) {
+        return Clone_1(pHead);
+        //return Clone_2(pHead);
+    }
+
+    /*
+     *方法一：
+     * 在原链表中每个节点后面复制一个节点，然后修改复制节点的指针，最后分离链表
+     *     * */
+    public RandomListNode Clone_1(RandomListNode pHead) {
+        if (pHead == null) {
+            return null;
+        }
+
+        RandomListNode head = pHead;
+        while (head != null) {
+            RandomListNode node = new RandomListNode(head.label);
+            node.random = head.random;
+            node.next = head.next;
+            head.next = node;
+            head = node.next;
+        }
+        head = pHead.next;
+        while (head != null) {
+            if (head.random != null) {
+                head.random = head.random.next;
+            }
+            head = head.next;
+            if (head != null) {
+                head = head.next;
+            }
+        }
+        //注意不能破坏原链表的结构！！！否则会错
+        head = pHead;
+        pHead = pHead.next;
+        while (head.next != null) {
+            RandomListNode node = head.next;
+            head.next = head.next.next;
+            head = node;
+        }
+        return pHead;
+    }
+
+    /*
+     * 方法二：
+     *建立一个原链表节点和新链表节点的HashMap，通过HashMap寻找相应的节点
+     * */
+    public RandomListNode Clone_2(RandomListNode pHead) {
+        Map<RandomListNode, RandomListNode> map = new HashMap<>();
+        RandomListNode node = pHead;
+        while (node != null) {
+            map.put(node, new RandomListNode(node.label));
+            node = node.next;
+        }
+        node = pHead;
+        while (node != null) {
+            RandomListNode t = map.get(node);
+            t.next = map.get(node.next);
+            t.random = map.get(node.random);
+            node = node.next;
+        }
+        return map.get(pHead);
+    }
+
+    //JZ-26.二叉搜索树与双向链表
+    public TreeNode Convert(TreeNode pRootOfTree) {
+        return Convert_1(pRootOfTree);
+        //return Convert_2(pRootOfTree);
+    }
+
+    //递归
+    public TreeNode Convert_1(TreeNode pRootOfTree) {
+        if (pRootOfTree == null) {
+            return null;
+        }
+        TreeNode[] left = new TreeNode[1];
+        TreeNode[] right = new TreeNode[1];
+        f(pRootOfTree, left, right);
+        return left[0];
+    }
+
+    public void f(TreeNode root, TreeNode[] left, TreeNode right[]) {
+        TreeNode tmp = null;
+        if (root.left != null) {
+            f(root.left, left, right);
+            root.left = right[0];
+            right[0].right = root;
+            tmp = left[0];
+        } else {
+            root.left = null;
+        }
+
+        right[0] = root;
+        if (root.right != null) {
+            f(root.right, left, right);
+            root.right = left[0];
+            left[0].left = root;
+        } else {
+            root.right = null;
+        }
+        left[0] = tmp == null ? root : tmp;
+    }
+
+    //非递归
+    public TreeNode Convert_2(TreeNode pRootOfTree) {
+        if (pRootOfTree == null) {
+            return null;
+        }
+        Stack<TreeNode> stack = new Stack<>();
+        TreeNode node = pRootOfTree;
+        TreeNode head = null;
+        TreeNode tail = null;
+        stack.push(node);
+        node = node.left;
+        while (!stack.isEmpty()) {
+            if (node != null) {
+                stack.push(node);
+                node = node.left;
+            } else {
+                node = stack.pop();
+                if (head == null) {
+                    head = node;
+                    head.left = null;
+                    tail = node;
+                } else {
+                    tail.right = node;
+                    node.left = tail;
+                    tail = node;
+                }
+                node = node.right;
+                tail.right = null;
+            }
+        }
+        return head;
+    }
+
+    //JZ-27.字符串的排列
+    /*
+     * 最小的是升序排列-最大的是降序排列
+     * 从最小迭代到最大即可
+     * */
+    public ArrayList<String> Permutation(String str) {
+        char[] buf = str.toCharArray();
+        ArrayList<String> ret = new ArrayList<>();
+        if (str == null || str.length() < 1) {
+            return ret;
+        }
+
+        Arrays.sort(buf);
+        ret.add(new String(buf));
+        while (next(buf)) {
+            ret.add(new String(buf));
+        }
+        return ret;
+    }
+
+    public boolean next(char[] buf) {
+        int k = buf.length - 2;
+        while (k >= 0) {
+            if (buf[k] < buf[k + 1]) {
+                break;
+            }
+            k--;
+        }
+        if (k < 0) {
+            return false;
+        }
+        int i = buf.length - 1;
+        while (i > k) {
+            if (buf[i] > buf[k]) {
+                break;
+            }
+            i--;
+        }
+        if (i <= k) {
+            return false;
+        }
+        char t = buf[i];
+        buf[i] = buf[k];
+        buf[k] = t;
+        int j = buf.length - 1;
+        i = k + 1;
+        while (i < j) {
+            t = buf[i];
+            buf[i] = buf[j];
+            buf[j] = t;
+            i++;
+            j--;
+        }
+        return true;
+    }
+
+    //JZ-28.数组中出现次数超过一半的数字
+    public int MoreThanHalfNum_Solution(int[] array) {
+//return MoreThanHalfNum_Solution_1(array);
+        return MoreThanHalfNum_Solution_2(array);
+    }
+
+    /*
+     * 方法一：Hash记录次数 时间：O（n）空间：O（n）
+     * */
+    public int MoreThanHalfNum_Solution_1(int[] array) {
+        Map<Integer, Integer> map = new HashMap<>();
+        int n = array.length / 2;
+        for (int x : array) {
+            if (map.containsKey(x)) {
+                int freq = map.get(x);
+                if (freq >= n) {
+                    return x;
+                }
+                map.put(x, map.get(x) + 1);
+            } else {
+                map.put(x, 1);
+            }
+        }
+        return 0;
+    }
+
+    /*
+     * 方法二：in-place
+     * 凡是遇到x!=y就将x和y都消去，如果存在要求的数，则最后剩下的一定是所需要的数。
+     * */
+    public int MoreThanHalfNum_Solution_2(int[] array) {
+        if (array == null || array.length < 1) {
+            return 0;
+        }
+        if (array.length == 1) {
+            return array[0];
+        }
+        int cur = 0;
+        int cnt = 0;
+        for (int i = 0; i < array.length; i++) {
+            if (cnt == 0) {
+                cur = array[i];
+                cnt++;
+            } else if (array[i] == cur) {
+                cnt++;
+            } else {
+                cnt--;
+            }
+        }
+        cnt = 0;
+        for (int x : array) {
+            if (x == cur) {
+                cnt++;
+                if (cnt > array.length / 2) {
+                    return x;
+                }
+            }
+        }
+        return 0;
+    }
+
+    //JZ-29.最小的k个数
+    public ArrayList<Integer> GetLeastNumbers_Solution(int[] input, int k) {
+        ArrayList<Integer> ret = new ArrayList<>();
+        PriorityQueue<Integer> queue = new PriorityQueue<>(((o1, o2) -> {
+            return o2 - o1;
+        }));
+        if (input == null || input.length < k || k < 1) {
+            return ret;
+        } else {
+            int i;
+            for (i = 0; i < k; i++) {
+                queue.add(input[i]);
+            }
+            while (i < input.length) {
+                if (input[i] < queue.peek()) {
+                    queue.remove();
+                    queue.add(input[i]);
+                }
+                i++;
+            }
+            ret.addAll(queue);
+            return ret;
+        }
     }
 }
+
