@@ -878,5 +878,136 @@ public class Solution {
             return ret;
         }
     }
+
+    //JZ-30.连续子数组的最大和
+    public int FindGreatestSumOfSubArray(int[] array) {
+        //return FindGreatestSumOfSubArray_1(array);
+        return FindGreatestSumOfSubArray_2(array);
+    }
+
+    /*方法一：动态规划
+     * f(n)表示以n结尾的最大值
+     * f(n)=max{f(n-1),0}+arr[n];
+     * ret=max{f(0),(1)...f(len-1)};
+     * */
+    public int FindGreatestSumOfSubArray_1(int[] array) {
+        if (array == null || array.length < 1) {
+            return 0;
+        }
+        if (array.length < 2) {
+            return array[0];
+        }
+        int[] f = new int[array.length];
+        int ret = 0;
+        f[0] = array[0];
+        ret = f[0];
+        for (int i = 1; i < array.length; i++) {
+            f[i] = Math.max(0, f[i - 1]) + array[i];
+            ret = Math.max(ret, f[i]);
+        }
+        return ret;
+    }
+
+    /*
+     * 方法二：in-place
+     * */
+    public int FindGreatestSumOfSubArray_2(int[] array) {
+        if (array == null || array.length < 1) {
+            return 0;
+        }
+        if (array.length < 2) {
+            return array[0];
+        }
+        int ret = array[0];
+        int sum = array[0];
+        for (int i = 1; i < array.length; i++) {
+            if (sum < 0) {
+                sum = 0;
+            }
+            sum += array[i];
+            ret = Math.max(ret, sum);
+        }
+        return ret;
+    }
+
+    //JZ-31.整数中1出现的次数（从1-n）
+    /*
+     * 一次考虑各个位置上为1的可能
+     * ret:计数器
+     * d=1,10,100,1000...代表个,十,百,千为一的情况下1后面位的取值可能
+     * k=10*d...用来分割数字(分割为t-r)
+     * t=n/k...代表1前面位取值的可能(0-t-1)
+     * 考虑如果r>=d,代表1位置上原本的数字大于1,1前面可以取t(1种可能)1后面可以取min(r-d+1,d)种可能
+     *      解释一下min(r-d+1,d):
+     *          如果r的最高位=1,比如r=188,d=100,那么1后面共有00-88共r-d+1=89种可能
+     *          如果r的最高位>2,比如r=299,d=100,那么1后面共有00-99共d种可能,因为1位置不能变.
+     * */
+    public int NumberOf1Between1AndN_Solution(int n) {
+        int ret = 0;
+        int k = 1;
+        int t = n / k;
+        int r = n - k * t;
+        int d = 1;
+        do {
+            k *= 10;
+            t = n / k;
+            r = n - k * t;
+            d = k / 10;
+            ret += t * d;
+            if (r >= d) {
+                ret += Math.min(d, r - d + 1);
+            }
+        } while (t != 0);
+        return ret;
+    }
+
+    //JZ-32.把数组排成最小的数
+    /*
+     * 总体原则:小的放前面 大的放后面.比如1 2 3->123
+     * 对于两个数字a,b,在最后组成的这个数里一定是a在b前或者b在a前.
+     * 即...a...b...或者...b...a...;...处对应的数字相同,只需分辨小的即可.
+     * 等价于比较a[0][a1]...b[0]b[1]...和b[0]b[1]...a[0]a[1]...
+     * 也就是比较a+b和b+a(字符串拼接)
+     * */
+    public String PrintMinNumber(int[] numbers) {
+        if (numbers == null || numbers.length < 1) {
+            return "0";
+        }
+        Integer[] integers = new Integer[numbers.length];
+        for (int i = 0; i < numbers.length; i++) {
+            integers[i] = numbers[i];
+        }
+        Arrays.sort(integers,
+                (a, b) -> (Integer.parseInt(a.toString() + b.toString()))
+                        - (Integer.parseInt(b.toString() + a.toString())));
+        String ret = "";
+        for (Integer item : integers) {
+            ret += item;
+        }
+        return ret;
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
