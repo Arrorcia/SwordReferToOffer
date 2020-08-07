@@ -946,7 +946,7 @@ public class Solution {
         int ret = 0;
         int k = 1;
         int t = n / k;
-        int r = n - k * t;
+        int r = 0;//n - k * t;
         int d = 1;
         do {
             k *= 10;
@@ -983,6 +983,546 @@ public class Solution {
         String ret = "";
         for (Integer item : integers) {
             ret += item;
+        }
+        return ret;
+    }
+
+    //JZ-33.丑数
+    /*
+     * 丑数是以2、3、5为因子组成的
+     * 新的丑数可以由已经有的丑数×2、×3、×5得来
+     * 按照递增规则，每次应该生成最小的新的丑数
+     * 最小的新的丑数只有三种可能分别是×2、3、5得来
+     * 令p2、p3、p5指向已经有的丑数，他们分别代表×2、3、5能得到对应最小丑数的已经有的丑数
+     * 下一个丑数就是2xp2、3xp3、5xp5里面最小的。
+     * 然后讨论更新p2、p3、p5的规则：
+     * 对于新的丑数而言，假如他能被2整除，那么它一定是通过2xp2得来；如果不是，就与p的定义矛盾
+     *   对于这种情况显然2xp2已经不是最小新丑数，需要更新p2
+     *   更新操作：p2=p2的下一个丑数。
+     * */
+    public int GetUglyNumber_Solution(int index) {
+        if (index == 0) {
+            return 0;
+        }
+
+        int[] ret = new int[index];
+        int p2 = 0, p3 = 0, p5 = 0;
+
+        ret[0] = 1;
+        for (int i = 1; i < index; i++) {
+            int newUgly = Math.min(2 * ret[p2], 3 * ret[p3]);
+            newUgly = Math.min(5 * ret[p5], newUgly);
+            if (newUgly % 2 == 0) {
+                p2++;
+            }
+            if (newUgly % 3 == 0) {
+                p3++;
+            }
+            if (newUgly % 5 == 0) {
+                p5++;
+            }
+            ret[i] = newUgly;
+        }
+        return ret[index - 1];
+    }
+
+    //JZ-34.第一个只出现一次的字符
+    /*
+     * 挨个读取字符，入队，用map存储每个字符的出现次数
+     * 如果读到队头超过1次的，循环出队
+     * 每出队一次，idx++
+     *     * */
+    public int FirstNotRepeatingChar(String str) {
+        if (str == null || str.length() < 1) {
+            return -1;
+        }
+
+        Queue<Character> queue = new LinkedList<>();
+        Map<Character, Integer> map = new HashMap<>();
+        int idx = 0;
+        int n = str.length();
+        for (int i = 0; i < n; i++) {
+            char ch = str.charAt(i);
+            int times = 1;
+            if (map.containsKey(ch)) {
+                times += map.get(ch);
+            }
+            map.put(ch, times);
+            queue.offer(ch);
+
+            while (!queue.isEmpty() && map.get(queue.peek()) > 1) {
+                idx++;
+                queue.poll();
+            }
+        }
+
+        if (queue.isEmpty()) {
+            return -1;
+        }
+        return idx;
+    }
+
+    //JZ-35.数组中的逆序对
+    /*
+     * 分治。
+     * start-mid-end
+     * f(arr,start,end):arr[start,end]中的逆序对。顺便对arr(start,end)排序
+     * f(arr,start,end)=f(arr,start,mid)+f(arr,mid+1,end)+左-右逆序对数
+     * 左-右逆序对数计算：对于左边的每一个数，计算其对应的逆序对，求和，复杂度O(n)
+     * T(n)=2T(n/2)+n.T(n)=nlogn.
+     * */
+    public int InversePairs(int[] array) {
+        if (array == null || array.length < 1) {
+            return 0;
+        }
+        return f(array, 0, array.length - 1) % 1000000007;
+    }
+
+    public int f(int[] array, int start, int end) {
+        if (start == end) {
+            return 0;
+        }
+        int ret = 0;
+        int mid = (start + end) / 2;
+        ret += f(array, start, mid) % 1000000007;
+        ret = ret % 1000000007;
+        ret += f(array, mid + 1, end) % 1000000007;
+        ret = ret % 1000000007;
+        int i = start, j = mid + 1;
+        while (i <= mid) {
+            while (j <= end && array[j] < array[i]) {
+                j++;
+            }
+            ret += (j - mid - 1) % 1000000007;
+            ret = ret % 1000000007;
+            i++;
+        }
+        //排序
+        int[] sortedArr = new int[end - start + 1];
+        i = start;
+        j = mid + 1;
+        int k = 0;
+        while (i <= mid && j <= end) {
+            if (array[i] < array[j]) {
+                sortedArr[k++] = array[i++];
+            } else {
+                sortedArr[k++] = array[j++];
+            }
+        }
+        while (i <= mid) {
+            sortedArr[k++] = array[i++];
+        }
+        while (j <= end) {
+            sortedArr[k++] = array[j++];
+        }
+        for (i = 0; i < end - start + 1; i++) {
+            array[start + i] = sortedArr[i];
+        }
+        return ret;
+    }
+
+    //JZ-36.两个链表的第一个公共节点
+    /*
+     * 先算出两个链表的长度，然后让长的后移，直到相等
+     * 然后同时后移，直到公共节点
+     * */
+    public ListNode FindFirstCommonNode(ListNode pHead1, ListNode pHead2) {
+        if (pHead1 == null || pHead2 == null) {
+            return null;
+        }
+
+        int len1 = 0, len2 = 0;
+        ListNode list1 = pHead1, list2 = pHead2;
+
+        while (list1 != null) {
+            len1++;
+            list1 = list1.next;
+        }
+        while (list2 != null) {
+            len2++;
+            list2 = list2.next;
+        }
+        list1 = pHead1;
+        list2 = pHead2;
+        while (len1 < len2) {
+            list2 = list2.next;
+            len2--;
+        }
+        while (len1 > len2) {
+            list1 = list1.next;
+            len1--;
+        }
+        while (list1 != list2) {
+            list1 = list1.next;
+            list2 = list2.next;
+        }
+        return list1;
+    }
+
+    //JZ-37.数字在排序数组中出现的次数
+    /*
+     * 先找到数字所在位置，然后左右搜索
+     * */
+    public int GetNumberOfK(int[] array, int k) {
+        if (array == null || array.length < 1) {
+            return 0;
+        }
+
+        int idx = Arrays.binarySearch(array, k);
+        if (idx < 0) {
+            return 0;
+        }
+        int cnt = 0;
+        for (int i = idx; i >= 0; i--) {
+            if (array[i] != array[idx]) {
+                break;
+            }
+            cnt++;
+        }
+        for (int i = idx + 1; i < array.length; i++) {
+            if (array[i] != array[idx]) {
+                break;
+            }
+            cnt++;
+        }
+        return cnt;
+    }
+
+    //JZ-38.二叉树的深度
+    /*
+     * 递归：略
+     * 层次遍历
+     * */
+    public int TreeDepth(TreeNode root) {
+        if (root == null) {
+            return 0;
+        }
+
+        Queue<TreeNode> queue = new LinkedList<>();
+        int height = 0;
+
+        queue.offer(root);
+
+        while (!queue.isEmpty()) {
+            height++;
+            int n = queue.size();
+            for (int i = 0; i < n; i++) {
+                TreeNode node = queue.poll();
+                if (node.left != null) {
+                    queue.offer(node.left);
+                }
+                if (node.right != null) {
+                    queue.offer(node.right);
+                }
+            }
+        }
+        return height;
+    }
+
+    //JZ-39.平衡二叉树
+    /*
+     * 递归：logn
+     * root是平衡二叉树等价于root.left是root.right是且高度差小于2
+     * */
+    public boolean IsBalanced_Solution(TreeNode root) {
+        if (root == null) {
+            return true;
+        }
+        int[] height = new int[1];
+        return IsBalanced_Solution(root, height);
+    }
+
+    public boolean IsBalanced_Solution(TreeNode root, int[] height) {
+        int left, right;
+        if (root == null) {
+            height[0] = 0;
+            return true;
+        }
+        if (!IsBalanced_Solution(root.left, height)) {
+            return false;
+        }
+        left = height[0];
+        if (!IsBalanced_Solution(root.right, height)) {
+            return false;
+        }
+        right = height[0];
+        if (left - right < -1 || left - right > 1) {
+            return false;
+        }
+        height[0] = 1 + Math.max(left, right);
+        return true;
+    }
+
+    //JZ-40.数组中只出现一次的数字
+    /*
+     * 设这两个数字为x，y。
+     * 将所有数字异或，最后结果就是x^y
+     * x和y不等，于是必有一位不同，按照这个不同位分为两个部分。
+     * 分别执行异或，即可得到x、y
+     * */
+    public void FindNumsAppearOnce(int[] array, int num1[], int num2[]) {
+        int t = 0;
+        for (int item : array) {
+            t ^= item;
+        }
+        int flag = 1;
+        while ((t & flag) == 0) {
+            flag = flag << 1;
+        }
+        int x = 0, y = 0;
+        for (int item : array) {
+            if ((flag & item) == 0) {
+                x ^= item;
+            } else {
+                y ^= item;
+            }
+        }
+        num1[0] = x;
+        num2[0] = y;
+    }
+
+    //JZ-41.和为S的连续正数序列
+    public ArrayList<ArrayList<Integer>> FindContinuousSequence(int sum) {
+        ArrayList<ArrayList<Integer>> ret = new ArrayList<>();
+        if (sum < 3) {
+            return ret;
+        }
+
+        int start = 1, end = 2, lim = sum / 2;
+        sum -= 3;
+        while (start <= lim) {
+            if (sum == 0) {
+                ArrayList<Integer> arrayList = new ArrayList<>();
+                for (int i = start; i <= end; i++) {
+                    arrayList.add(i);
+                }
+                ret.add(arrayList);
+            }
+            if (sum < 0) {
+                sum += start++;
+            } else {
+                sum -= ++end;
+            }
+        }
+        return ret;
+    }
+
+    //JZ-42.和为S的两个数字
+    //根据均值不等式，和相同的两个数相差越大，积越小
+    public ArrayList<Integer> FindNumbersWithSum(int[] array, int sum) {
+        int i = 0, j = array.length - 1;
+        ArrayList<Integer> ret = new ArrayList<>();
+
+        if (array == null || array.length < 1) {
+            return ret;
+        }
+
+        sum -= array[i];
+        sum -= array[j];
+        while (i < j) {
+            if (sum == 0) {
+                ret.add(array[i]);
+                ret.add(array[j]);
+                break;
+            } else if (sum < 0) {
+                sum += array[j] - array[j - 1];
+                j--;
+            } else {
+                sum += array[i] - array[i + 1];
+                i++;
+            }
+        }
+        return ret;
+    }
+
+    //JZ-43.左旋转字符串
+    public String LeftRotateString(String str, int n) {
+        if (str == null || str.length() < 2 || n % str.length() == 0) {
+            return str;
+        }
+        n = n % str.length();
+        return str.substring(n) + str.substring(0, n);
+    }
+
+    //JZ-44.反转单词顺序列
+    public String ReverseSentence(String str) {
+        if (str == null || str.matches(" *")) {
+            return str;
+        }
+        String[] strings = str.split(" ");
+        String ret = null;
+        for (String string : strings) {
+            if (ret == null) {
+                ret = string;
+            } else {
+                ret = string + " " + ret;
+            }
+        }
+        return ret;
+    }
+
+    //JZ-45.扑克牌顺子
+    public boolean isContinuous(int[] numbers) {
+        Set<Integer> set = new HashSet<>();
+        int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE, cnt = 0;
+        for (int item : numbers) {
+            if (item == 0) {
+                cnt++;
+            } else {
+                min = Math.min(min, item);
+                max = Math.max(max, item);
+                set.add(item);
+            }
+        }
+        return cnt + set.size() == numbers.length && max - min + 1 <= numbers.length;
+    }
+
+    //JZ-46.孩子们的游戏
+    /*
+     * f(n,m):表示n个人报数剩下的人
+     * f(n,m)=(f(n-1,m)+m)%n
+     * f(n,m)去掉编号为(m-1)%n的，于是在剩下的n-1个中，从m开始并且数f(n-1,m)为最终结果
+     * */
+    public int LastRemaining_Solution(int n, int m) {
+        if (n < 1) {
+            return -1;
+        }
+        if (n == 1) {
+            return 0;
+        }
+        return (LastRemaining_Solution(n - 1, m) + m) % n;
+    }
+
+    //JZ-47.求1+2+...n
+    /*
+     * f(n)=f(n-1)+n;
+     * f(1)=1;f(0)=0;
+     * 条件语句借助&&实现（如果前面为false不会执行后面的）
+     * */
+    public int Sum_Solution(int n) {
+        //n(n-1)/2
+        int[] ret = new int[1];
+        Sum_Solution(n, ret);
+        return ret[0];
+    }
+
+    public boolean Sum_Solution(int n, int ret[]) {
+        //n(n-1)/2
+        ret[0] += n;
+        return n == 1 || Sum_Solution(n - 1, ret);
+    }
+
+    //JZ-48.不用加减乘除做加法
+    public int Add(int num1, int num2) {
+        int c = 0;
+        int ret = 0;
+        for (int i = 0; i < 32; i++) {
+            int t = 1 << i;
+            int a = t & num1, b = t & num2;
+            /*
+             * if a[i]!=b[i]:ret[i]=!c
+             * else ret[i]=c
+             *
+             * if a[i]!=b[i]:c=c
+             * else if a[i]==b[i]==0:c=0;
+             * else c=1
+             * */
+            if (a != b) {
+                ret |= (c << i) ^ t;//!c
+                //c=c;
+            } else {
+                ret |= c << i;
+                if (a != 0) {
+                    c = 1;
+                } else {
+                    c = 0;
+                }
+            }
+        }
+        return ret;
+    }
+
+    //JZ-49.吧字符串转换成整数
+    public int StrToInt(String str) {
+        if (str == null || str.length() < 1) {
+            return 0;
+        }
+
+        char[] arr = str.toCharArray();
+        int ret = 0;
+        boolean neg = false;
+
+        switch (arr[0]) {
+            case '+':
+                break;
+            case '-':
+                neg = true;
+                break;
+            default:
+                if (Character.isDigit(arr[0])) {
+                    ret = arr[0] - '0';
+                } else {
+                    return 0;
+                }
+                break;
+        }
+
+        for (int i = 1; i < arr.length; i++) {
+            if (!Character.isDigit(arr[i])) {
+                ret = 0;
+                break;
+            }
+            ret = ret * 10 + arr[i] - '0';
+        }
+        if (neg) {
+            ret = -ret;
+        }
+        return ret;
+    }
+
+    //JZ-50.数组中重复的数字
+    /*
+     * 解法一：Set
+     * 挨个放入，放入之前检测是否存在。
+     * 空间：O(n)，时间O(n)
+     * 解法二：inplace
+     * 将每一个数字放入对应位置
+     * 如果当前数字已经在对应位置，那么下一个
+     * 如果不在，那么和对应位置所在数交换，并且试图放置换来的数字（如果两者相等，那么返回）
+     * 空间：O(1)，时间O（n）
+     * */
+    public boolean duplicate(int numbers[], int length, int[] duplication) {
+        int i = 0;
+        while (i < length) {
+            int k = numbers[i];
+            if (k == i) {
+                i++;
+            } else if (numbers[k] == k) {
+                duplication[0] = k;
+                return true;
+            } else {
+                numbers[i] = numbers[k];
+                numbers[k] = k;
+            }
+        }
+        return false;
+    }
+
+    //JZ-51.构建乘积数组
+    public int[] multiply(int[] A) {
+        if (A == null || A.length < 1) {
+            return A;
+        }
+        int ret[] = new int[A.length];
+        Arrays.fill(ret, 1);
+        int left = 1, right = 1;
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] *= left;
+            left *= A[i];
+        }
+        for (int i = ret.length - 1; i >= 0; i--) {
+            ret[i] *= right;
+            right *= A[i];
         }
         return ret;
     }
