@@ -27,10 +27,17 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
-        run: echo Hello, world! 1>&2
+        run: |
+          echo Hello, world!
+          exit 0
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
+          exit 1
+      - name: end
+        run: |
+          echo end...
+          exit 0
